@@ -1,8 +1,7 @@
 from bottle import route, run, template, request, response
 import uuid
 import os
-from fitbit.api import Fitbit
-
+import fitbit_query
 redirect_uri="http://localhost:8080/"
 
 client_secret = os.environ["fb_ClientSecret"]
@@ -28,26 +27,9 @@ def index():
 
 @route('/yajikita/callback')
 def callback():
-    fitbit = Fitbit(
-        client_id,
-        client_secret,
-        redirect_uri=redirect_uri,
-        timeout=10,
-        )
     callback_code = request.query["code"]
-    if callback_code:
-        try:
-            fitbit.client.fetch_access_token(callback_code)
-        except:
-            pass
-    else:
-        pass
-    for key, value in fitbit.client.session.token.items():
-        print('{} = {}'.format(key, value))
-        yield template('Requests code is <b>{{code}}</b>, key={{key}}, {{value}}', code=callback_code, key=key, value=value)
-
-    return "exit"
-
+    fitbit_query.regist(callback_code)
+    return '<head><meta http-equiv="refresh"content="3; url=http://localhost:8080/yajikita/"></head><body>regist sucessful.</body>'
 
 
 if __name__ == '__main__':
