@@ -1,6 +1,6 @@
 import sqlite3
 
-user_db = 'user_master.sqlite'
+user_db = 'yajikita.sqlite'
 
 def initialize():
     connection = sqlite3.connect(user_db)
