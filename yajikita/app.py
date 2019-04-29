@@ -1,8 +1,9 @@
 from urllib.parse import urlencode
 import uuid
 import os
+import json
 
-from bottle import route, run, template, request, response
+from bottle import route, run, template, request, response, static_file
 
 from yajikita.fitbit_query import register, client_id, redirect_uri
 from yajikita.user_master import list_users
@@ -40,3 +41,15 @@ def test():
     get_steps(u['access_token'],
               date.today() - day1,
               date.today() + day1)
+
+@route('/yajikita/<filename>')
+def _static_file(filename):
+    return static_file(filename, root='./html/')
+
+
+@route('/yajikita/api/dashboard')
+def get_dashboard():
+    from yajikita.user_master import get_dashboard_info
+    ret = get_dashboard_info('5N3Q55')  # TODO
+    response.headers['Content-Type'] = 'application/json'
+    return json.dumps(ret, ensure_ascii=False)

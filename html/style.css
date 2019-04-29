@@ -1,0 +1,76 @@
+body {
+    margin: 1ex;
+    padding: 0;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+}
+
+.profile .avatar {
+    height: 2.5em;
+    width: 2.5em;
+    margin-right: 1ex;
+}
+
+.private div:nth-child(1) {
+    display: flex;
+    flex-direction: row;
+}
+
+.race {
+    margin-top: 1ex;
+}
+
+.title {
+    color: white;
+    font-weight: bold;
+    background-color: #009592;
+    padding: 1ex;
+}
+
+.graph {
+    display: flex;
+    flex-direction: column;
+    background-color: #33bbb7;
+    padding: 1ex;
+}
+
+.graph .item {
+    display: flex;
+    flex-direction: row;
+    height: 32px;
+    align-items: center;
+}
+
+.graph .item .avatar {
+    display: block;
+    width: 30px;
+    height: 30px;
+    margin-right: 5px;
+}
+
+.graph .item .bar {
+    flex-grow: 1;
+    height: 30px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.graph .item .bar div {
+    background-color: #72d0cf;
+    padding-left: 0.5ex;
+}
+
+.graph .item .bar div.self {
+    background-color: #ffffff;
+}
+
+.graph .item .steps, .graph .item .last-update {
+    width: 7ex;
+    text-align: right;
+    color: #edffff;
+}
