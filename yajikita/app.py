@@ -35,7 +35,7 @@ def callback():
 @route('/yajikita/test')
 def test():
     from yajikita.fitbit_query import get_steps
-    from datetime import date, timedelta
+    from datetime import date
     u = list_users()[0]
     get_steps(u['access_token'],
               date.today(),

@@ -36,8 +36,32 @@ def register(acode):
         access_token = ret["access_token"]
         refresh_token = ret["refresh_token"]
         yajikita.user_master.update_user(user_id, access_token=access_token, refresh_token=refresh_token)
+        get_steps(access_token, "today", "7d")
     else:
         print("ERROR")
+
+def refresh_profile(rtoken):
+    authcode = 'Basic ' + base64.b64encode((client_id + ":" + client_secret).encode('utf-8')).decode('utf-8')
+
+    headers = {
+        'Authorization': authcode,
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+
+    data = {
+      'grant_type': 'refresh_token',
+      'refresh_token': rtoken
+    }
+    response = requests.post('https://api.fitbit.com/oauth2/token', headers=headers, data=data)
+    if response.status_code == 200:
+        ret = json.loads(response.text)
+        user_id = ret["user_id"]
+        access_token = ret["access_token"]
+        refresh_token = ret["refresh_token"]
+        yajikita.user_master.update_user(user_id, access_token=access_token, refresh_token=refresh_token)
+    else:
+        print("ERROR")
+}
 
 def get_user_profile(uname, access_token):
     auth = 'Bearer ' + access_token
@@ -62,8 +86,8 @@ def get_steps(access_token, end_date, period):
     resp = requests.get(url, headers=headers)
     print(resp.text)
 
+
 def renew_per_hour():
-    users = yajikita.user_master.list_user()
+    users = yajikita.user_master.list_users()
     for s_user in users:
         get_user_profile(s_user[0],s_user[1])
-
