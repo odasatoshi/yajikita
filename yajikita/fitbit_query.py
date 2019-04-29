@@ -38,3 +38,13 @@ def register(acode):
         update_user(user_id, access_token, refresh_token)
     else:
         print("ERROR")
+
+
+def get_steps(access_token, start_date, end_date):
+    headers = {
+        'Authorization': 'Bearer {}'.format(access_token)
+    }
+    url = 'https://api.fitbit.com/1/user/-/activities/steps/date/{}/{}.json'.format(
+        str(start_date), str(end_date))
+    resp = requests.get(url, headers=headers)
+    print(resp.text)
