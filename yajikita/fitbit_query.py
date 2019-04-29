@@ -2,12 +2,19 @@ import base64
 import requests
 import os
 import json
-import user_master
 
-def regist(acode):
-    client_secret = os.environ["fb_ClientSecret"]
-    client_id = os.environ["fb_ClientID"]
+from yajikita.user_master import update_user
 
+client_secret = os.environ['fb_ClientSecret']
+client_id = os.environ['fb_ClientID']
+redirect_uri = 'http://localhost:8080/yajikita/callback'
+
+def check_precondition():
+    if not (client_id and client_secret):
+        print('fb_ClientSecret or fb_ClientID is empty')
+        exit()
+
+def register(acode):
     authcode = 'Basic ' + base64.b64encode((client_id + ":" + client_secret).encode('utf-8')).decode('utf-8')
 
     headers = {
@@ -17,7 +24,7 @@ def regist(acode):
     data = {
         'clientId': client_id,
         'grant_type': 'authorization_code',
-        'redirect_uri': 'http://localhost:8080/yajikita/callback',
+        'redirect_uri': redirect_uri,
         'code': acode
     }
 
@@ -28,6 +35,6 @@ def regist(acode):
         user_id = ret["user_id"]
         access_token = ret["access_token"]
         refresh_token = ret["refresh_token"]
-        user_master.update_user(user_id, access_token, refresh_token)
+        update_user(user_id, access_token, refresh_token)
     else:
         print("ERROR")
