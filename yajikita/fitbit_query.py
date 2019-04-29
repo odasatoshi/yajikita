@@ -53,17 +53,17 @@ def get_user_profile(uname, access_token):
     else:
         print("ERROR")
 
-def get_steps(access_token, start_date, end_date):
+def get_steps(access_token, end_date, period):
     headers = {
         'Authorization': 'Bearer {}'.format(access_token)
     }
     url = 'https://api.fitbit.com/1/user/-/activities/steps/date/{}/{}.json'.format(
-        str(start_date), str(end_date))
+        str(end_date), str(period))
     resp = requests.get(url, headers=headers)
     print(resp.text)
 
 def renew_per_hour():
-    users = user_master.list_user()
+    users = yajikita.user_master.list_user()
     for s_user in users:
         get_user_profile(s_user[0],s_user[1])
 

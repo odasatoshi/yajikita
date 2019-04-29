@@ -37,10 +37,9 @@ def test():
     from yajikita.fitbit_query import get_steps
     from datetime import date, timedelta
     u = list_users()[0]
-    day1 = timedelta(days=1)
     get_steps(u['access_token'],
-              date.today() - day1,
-              date.today() + day1)
+              date.today(),
+              "1d")
 
 @route('/yajikita/<filename>')
 def _static_file(filename):
