@@ -80,3 +80,12 @@ def get_dashboard():
     if not ret:
         return HTTPResponse(status=401)
     return ret
+
+# To refresh access token, GET this URI per 4hours.
+@route('/yajikita/api/refresh')
+def refresh_acesstoken():
+    from yajikita.user_master import list_users
+    from yajikita.fitbit_query import refresh_profile
+    users = list_users()
+    for s_user in users:
+        refresh_profile(s_user["refresh_token"])
