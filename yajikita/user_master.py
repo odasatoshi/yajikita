@@ -68,6 +68,18 @@ def update_user(uname, access_token="", refresh_token="", displayName="", avatar
     connection.commit()
     connection.close()
 
+def update_steps(user_id, daily_steps):
+    connection = sqlite3.connect(user_db)
+    cursor = connection.cursor()
+    #TODO あとでまとめる
+    for daily_step in daily_steps:
+        try:
+            cursor.execute('REPLACE INTO STEPS VALUES (?, ?, ?, ?);', (daily_step["dateTime"],user_id, 1, daily_step["value"]))
+        except sqlite3.Error as e:
+            print('sqlite3.Error occurred:', e.args[0])
+    connection.commit()
+    connection.close()
+
 def list_users():
     with sqlite3.connect(user_db) as conn:
         cursor = conn.cursor()
