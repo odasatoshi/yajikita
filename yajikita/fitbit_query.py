@@ -2,7 +2,7 @@ import base64
 import requests
 import os
 import json
-import yajikita.user_master
+from yajikita.user_master import update_user, update_steps, list_users
 
 
 client_secret = os.environ['fb_ClientSecret']
@@ -36,7 +36,7 @@ def register(acode):
         access_token = ret["access_token"]
         refresh_token = ret["refresh_token"]
         get_steps(user_id, access_token, "today", "7d")
-        ret = yajikita.user_master.update_user(user_id, access_token=access_token, refresh_token=refresh_token)
+        ret = update_user(user_id, access_token=access_token, refresh_token=refresh_token)
         if not ret['name']:
             return get_user_profile(user_id, access_token)
         return ret
@@ -61,7 +61,7 @@ def refresh_profile(rtoken):
         user_id = ret["user_id"]
         access_token = ret["access_token"]
         refresh_token = ret["refresh_token"]
-        yajikita.user_master.update_user(user_id, access_token=access_token, refresh_token=refresh_token)
+        update_user(user_id, access_token=access_token, refresh_token=refresh_token)
     else:
         print("ERROR")
 
@@ -76,7 +76,7 @@ def get_user_profile(user_id, access_token):
         ret = json.loads(response.text)["user"]
         avatar = ret["avatar150"].replace('profile_150_square', 'profile_64_square')
         displayName = ret["displayName"]
-        return yajikita.user_master.update_user(user_id, displayName=displayName, avatar=avatar)
+        return update_user(user_id, displayName=displayName, avatar=avatar)
     else:
         return None
 
@@ -89,11 +89,11 @@ def get_steps(user_id, access_token, end_date, period):
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         ret = json.loads(response.text)["activities-steps"]
-        yajikita.user_master.update_steps(user_id, ret)
+        update_steps(user_id, ret)
     else:
         print("ERROR")
 
 def renew_per_hour():
-    users = yajikita.user_master.list_users()
+    users = list_users()
     for s_user in users:
         get_user_profile(s_user[0],s_user[1])
