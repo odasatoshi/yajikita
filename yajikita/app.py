@@ -89,3 +89,13 @@ def refresh_acesstoken():
     users = list_users()
     for s_user in users:
         refresh_profile(s_user["refresh_token"])
+
+# To reload steps, GET this URI per an hour.
+@route('/yajikita/api/reload_step')
+def reload_step():
+    from yajikita.user_master import list_users
+    from yajikita.fitbit_query import get_steps
+    users = list_users()
+    for s_user in users:
+        get_steps(s_user["user_id"], s_user["access_token"], "today", "7d")
+
