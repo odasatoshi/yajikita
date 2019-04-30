@@ -44,29 +44,32 @@ def initialize():
     connection.commit()
     connection.close()
 
+
 def update_user(uname, access_token="", refresh_token="", displayName="", avatar=""):
-    connection = sqlite3.connect(user_db)
-    cursor = connection.cursor()
-    try:
-        cursor.execute('SELECT * FROM USERS WHERE id=?', (uname,))
-        data = cursor.fetchall()
-        if len(data) == 0:
+    ret = {}
+    with sqlite3.connect(user_db) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, displayName, avatar FROM USERS WHERE id=?', (uname,))
+        data = cursor.fetchone()
+        if not data:
+            ret = {'user_id': uname, 'name': displayName, 'avatar': avatar}
             cursor.execute(
-            "INSERT INTO USERS VALUES (?, ?, ?, ?, ?)",  (uname,access_token,refresh_token, displayName, avatar))
+                "INSERT INTO USERS VALUES (?, ?, ?, ?, ?)",
+                (uname, access_token, refresh_token, displayName, avatar))
         else:
+            ret = {'user_id': data[0], 'name': data[1], 'avatar': data[2]}
             if access_token == "":
+                ret['name'] = displayName
+                ret['avatar'] = avatar
                 cursor.execute(
-                "UPDATE USERS SET displayName=?, avatar=? WHERE id=?",
-                  (displayName, avatar, uname))
+                    "UPDATE USERS SET displayName=?, avatar=? WHERE id=?",
+                    (displayName, avatar, uname))
             else:
                 cursor.execute(
-                "UPDATE USERS SET access_token=?, refresh_token=? WHERE id=?",
-                  (access_token,refresh_token, uname))
-
-    except sqlite3.Error as e:
-        print('sqlite3.Error occurred:', e.args[0])
-    connection.commit()
-    connection.close()
+                    "UPDATE USERS SET access_token=?, refresh_token=? WHERE id=?",
+                    (access_token,refresh_token, uname))
+        conn.commit()
+    return ret
 
 def update_steps(user_id, daily_steps):
     connection = sqlite3.connect(user_db)
@@ -157,7 +160,7 @@ def get_dashboard_info(user_id):
             ret['avatar'] = ret['users'][user_id]['avatar']
         else:
             # レースが1つもない場合
-            u = cursor.execute('SELECT displayName, avatar FROM USERS WHERE id=?', user_id).fetchone()
+            u = cursor.execute('SELECT displayName, avatar FROM USERS WHERE id=?', (user_id,)).fetchone()
             ret['name'] = u[0]
             ret['avatar'] = u[1]
         ret['n_races'] = {
