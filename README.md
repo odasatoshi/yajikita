@@ -6,9 +6,9 @@
 
    1. `export fb_ClientSecret=<Client Secret>`
    2. `export fb_ClientID=<Client ID>`
-   3. `app.py`の`get_dashboard`関数内にあるTODOと書かれた箇所を自分のユーザIDで書き換える
-   4. `python -m yajikita`
+   3. `python -m yajikita`
 
 3. ブラウザからダッシュボードを開く
 
-   * http://localhost:8080/yajikita/index.html
+   1. http://localhost:8080/yajikita/
+   2. (初回のみ) fitbitのOAuthのページにリダイレクトされるので許可を与える
