@@ -3,6 +3,10 @@ body {
     padding: 0;
 }
 
+.loggedin {
+    visibility: hidden;
+}
+
 .profile {
     display: flex;
     align-items: center;

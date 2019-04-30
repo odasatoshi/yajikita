@@ -1,5 +1,12 @@
 class Main {
+  session: string;
+
   constructor() {
+    this.session = localStorage.getItem('session');
+    if (!this.session) {
+      this.login();
+      return
+    }
     this.setup_dashboard()
   }
 
@@ -9,6 +16,14 @@ class Main {
 
     xhr.addEventListener("load", () => {
       const resp = xhr.response;
+      if (!resp) {
+        if (xhr.status === 401)
+          this.login();
+        else if (xhr.status === 500)
+          alert('Internal Server Error');
+        return;
+      }
+
       const self_id = resp['user_id'];
       const races = resp['races'];
       const users = resp['users'];
@@ -16,6 +31,8 @@ class Main {
       document.getElementById('profile_avatar').setAttribute('src', resp['avatar']);
       document.getElementById('profile_name').textContent = resp['name'] + ' (id: ' + self_id + ')';
       document.getElementById('profile_race').textContent = resp['n_races']['running'] + ' レース参加中';
+      const q: Array<HTMLElement> = <any>document.querySelectorAll('.loggedin');
+      q.forEach((e) => { e.classList.remove('loggedin'); });
 
       races.forEach((race: any) => {
         const e_race = document.createElement('div');
@@ -69,7 +86,18 @@ class Main {
       });
     });
     xhr.responseType = "json";
-    xhr.open("GET", "api/dashboard");
+    xhr.open("GET", "api/dashboard?session=" + this.session);
+    xhr.send();
+  }
+
+  login() {
+    let xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", () => {
+      const resp = xhr.response;
+      location.href = resp['url'];
+    });
+    xhr.responseType = "json";
+    xhr.open("GET", "api/oauth_info");
     xhr.send();
   }
 }

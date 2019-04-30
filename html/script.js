@@ -1,18 +1,33 @@
 var Main = (function () {
     function Main() {
+        this.session = localStorage.getItem('session');
+        if (!this.session) {
+            this.login();
+            return;
+        }
         this.setup_dashboard();
     }
     Main.prototype.setup_dashboard = function () {
+        var _this = this;
         var container = document.getElementById("races");
         var xhr = new XMLHttpRequest();
         xhr.addEventListener("load", function () {
             var resp = xhr.response;
+            if (!resp) {
+                if (xhr.status === 401)
+                    _this.login();
+                else if (xhr.status === 500)
+                    alert('Internal Server Error');
+                return;
+            }
             var self_id = resp['user_id'];
             var races = resp['races'];
             var users = resp['users'];
             document.getElementById('profile_avatar').setAttribute('src', resp['avatar']);
             document.getElementById('profile_name').textContent = resp['name'] + ' (id: ' + self_id + ')';
             document.getElementById('profile_race').textContent = resp['n_races']['running'] + ' レース参加中';
+            var q = document.querySelectorAll('.loggedin');
+            q.forEach(function (e) { e.classList.remove('loggedin'); });
             races.forEach(function (race) {
                 var e_race = document.createElement('div');
                 e_race.setAttribute('class', 'race');
@@ -52,9 +67,19 @@ var Main = (function () {
             });
         });
         xhr.responseType = "json";
-        xhr.open("GET", "api/dashboard");
+        xhr.open("GET", "api/dashboard?session=" + this.session);
+        xhr.send();
+    };
+    Main.prototype.login = function () {
+        var xhr = new XMLHttpRequest();
+        xhr.addEventListener("load", function () {
+            var resp = xhr.response;
+            location.href = resp['url'];
+        });
+        xhr.responseType = "json";
+        xhr.open("GET", "api/oauth_info");
         xhr.send();
     };
     return Main;
-}());
+})();
 window.addEventListener("DOMContentLoaded", function () { return new Main(); });

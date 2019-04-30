@@ -1,55 +1,72 @@
+import hmac
 from urllib.parse import urlencode
 import uuid
 import os
 import json
 
-from bottle import route, run, template, request, response, static_file
+from bottle import route, run, template, request, response, static_file, HTTPResponse
 
 from yajikita.fitbit_query import register, client_id, redirect_uri
-from yajikita.user_master import list_users
+from yajikita.user_master import get_dashboard_info
+
+HMAC_KEY = b'yajikita_yajikita'
 
 
 @route('/yajikita/')
 def index():
-    if request.get_cookie("session"):
-        sessionid = request.get_cookie("session")
-    else:
-        sessionid = str(uuid.uuid4())
-        response.set_cookie("session", sessionid)
+    return static_file('index.html', root='./html/')
 
-    qp = urlencode((
-        ('response_type', 'code'), ('client_id', client_id), ('redirect_uri', redirect_uri),
-        ('scope', ' '.join(['activity', 'profile']))
-    ))
-    regurl = 'https://www.fitbit.com/oauth2/authorize?' + qp
-    ret = '<a href="/yajikita/status"> status </status><br><a href="' + regurl + '"> regist </status>'
-    return ret
 
 @route('/yajikita/callback')
-def callback():
-    callback_code = request.query["code"]
-    register(callback_code)
-    return '<head><meta http-equiv="refresh"content="3; url=http://localhost:8080/yajikita/"></head><body>regist sucessful.</body>'
+def index():
+    return static_file('callback.html', root='./html/')
 
-
-@route('/yajikita/test')
-def test():
-    from yajikita.fitbit_query import get_steps
-    from datetime import date, timedelta
-    u = list_users()[0]
-    day1 = timedelta(days=1)
-    get_steps(u['access_token'],
-              date.today() - day1,
-              date.today() + day1)
 
 @route('/yajikita/<filename>')
 def _static_file(filename):
     return static_file(filename, root='./html/')
 
 
+def _response_json(obj):
+    response.headers['Content-Type'] = 'application/json'
+    return json.dumps(obj, ensure_ascii=False)
+
+
+def _validate_session(session):
+    user_id, digest = session.split(':', maxsplit=1)
+    if not user_id:
+        return None
+    expected = hmac.new(HMAC_KEY, msg=user_id.encode('utf8'),
+                        digestmod='sha256').hexdigest()
+    if digest == expected:
+        return user_id
+    return None
+
+
+@route('/yajikita/api/oauth_info')
+def get_oauth_info():
+    qp = urlencode((
+        ('response_type', 'code'), ('client_id', client_id), ('redirect_uri', redirect_uri),
+        ('scope', ' '.join(['activity', 'profile']))
+    ))
+    url = 'https://www.fitbit.com/oauth2/authorize?' + qp
+    return _response_json({'url': url})
+
+@route('/yajikita/api/oauth_callback')
+def oauth_callback():
+    callback_code = request.query["code"]
+    ret = register(callback_code)
+    if ret:
+        hmac_data = hmac.new(HMAC_KEY, msg=ret['user_id'].encode('utf8'),
+                             digestmod='sha256').hexdigest()
+        ret['session'] = ret['user_id'] + ':' + hmac_data
+    return _response_json(ret)
+
+
 @route('/yajikita/api/dashboard')
 def get_dashboard():
-    from yajikita.user_master import get_dashboard_info
-    ret = get_dashboard_info('5N3Q55')  # TODO
-    response.headers['Content-Type'] = 'application/json'
-    return json.dumps(ret, ensure_ascii=False)
+    user_id = _validate_session(request.query['session'])
+    ret = _response_json(get_dashboard_info(user_id) if user_id else None)
+    if not ret:
+        return HTTPResponse(status=401)
+    return ret

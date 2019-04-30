@@ -35,23 +35,26 @@ def register(acode):
         user_id = ret["user_id"]
         access_token = ret["access_token"]
         refresh_token = ret["refresh_token"]
-        yajikita.user_master.update_user(user_id, access_token=access_token, refresh_token=refresh_token)
+        ret = yajikita.user_master.update_user(user_id, access_token=access_token, refresh_token=refresh_token)
+        if not ret['name']:
+            return get_user_profile(user_id, access_token)
+        return ret
     else:
-        print("ERROR")
+        return None
 
-def get_user_profile(uname, access_token):
+def get_user_profile(user_id, access_token):
     auth = 'Bearer ' + access_token
     headers = {
         'Authorization': auth,
     }
-    response = requests.get('https://api.fitbit.com/1/user/'+ uname + '/profile.json', headers=headers)
+    response = requests.get('https://api.fitbit.com/1/user/-/profile.json', headers=headers)
     if response.status_code == 200:
         ret = json.loads(response.text)["user"]
-        avatar = ret["avatar150"]
+        avatar = ret["avatar150"].replace('profile_150_square', 'profile_64_square')
         displayName = ret["displayName"]
-        yajikita.user_master.update_user(uname, displayName=displayName, avatar=avatar)
+        return yajikita.user_master.update_user(user_id, displayName=displayName, avatar=avatar)
     else:
-        print("ERROR")
+        return None
 
 def get_steps(access_token, start_date, end_date):
     headers = {
