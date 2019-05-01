@@ -9,6 +9,7 @@ from yajikita.user_master import (
 client_secret = os.environ['fb_ClientSecret']
 client_id = os.environ['fb_ClientID']
 redirect_uri = 'http://localhost:8080/yajikita/callback'
+ACCESS_TOKEN_EXPIRES_IN = 86400 * 30  # 30 days
 
 def check_precondition():
     if not (client_id and client_secret):
@@ -26,7 +27,8 @@ def register(acode):
         'clientId': client_id,
         'grant_type': 'authorization_code',
         'redirect_uri': redirect_uri,
-        'code': acode
+        'code': acode,
+        'expires_in': ACCESS_TOKEN_EXPIRES_IN
     }
 
     response = requests.post('https://api.fitbit.com/oauth2/token', headers=headers, data=data)
@@ -53,8 +55,9 @@ def refresh_profile(rtoken):
     }
 
     data = {
-      'grant_type': 'refresh_token',
-      'refresh_token': rtoken
+        'grant_type': 'refresh_token',
+        'refresh_token': rtoken,
+        'expires_in': ACCESS_TOKEN_EXPIRES_IN
     }
     response = requests.post('https://api.fitbit.com/oauth2/token', headers=headers, data=data)
     if response.status_code == 200:
