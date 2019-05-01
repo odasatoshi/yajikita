@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime,date
 import sqlite3
 
 user_db = 'yajikita.sqlite'
@@ -117,7 +117,7 @@ def get_dashboard_info(user_id):
     ret = {'user_id': user_id, 'users': {}, 'races': []}
     n_running = 0
     user_set = set()
-    today = datetime.today()
+    today = date.today()
     with sqlite3.connect(user_db) as conn:
         cursor = conn.cursor()
 
@@ -140,8 +140,8 @@ def get_dashboard_info(user_id):
         } for r in e]
         ret['races'] = races
         for r in races:
-            s = datetime.strptime(r['start'], '%Y-%m-%d')
-            e = datetime.strptime(r['end'], '%Y-%m-%d')
+            s = datetime.strptime(r['start'], '%Y-%m-%d').date()
+            e = datetime.strptime(r['end'], '%Y-%m-%d').date()
             if s <= today and today <= e:
                 n_running += 1
 

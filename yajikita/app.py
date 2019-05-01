@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 import hmac
 from urllib.parse import urlencode
 import uuid
@@ -133,8 +133,8 @@ def _create_race():
     if len(members) <= 1:
         return HTTPResponse(status=400, body='members requires two or more entries')
     try:
-        start = date.fromisoformat(start)
-        end = date.fromisoformat(end)
+        start = datetime.strptime(start, '%Y-%m-%d').date()
+        end = datetime.strptime(end, '%Y-%m-%d').date()
     except Exception:
         return HTTPResponse(status=400, body='start/end date is invalid')
     register_race(user_id, name, start, end, members)
