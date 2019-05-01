@@ -1,3 +1,4 @@
+from datetime import date
 import hmac
 from urllib.parse import urlencode
 import uuid
@@ -6,19 +7,20 @@ import json
 
 from bottle import route, run, template, request, response, static_file, HTTPResponse
 
-from yajikita.fitbit_query import register, client_id, redirect_uri
-from yajikita.user_master import get_dashboard_info
+from yajikita.fitbit_query import register, client_id, redirect_uri, get_friends
+from yajikita.user_master import (
+    get_dashboard_info, get_access_token, register_race)
 
 HMAC_KEY = b'yajikita_yajikita'
 
 
 @route('/yajikita/')
-def index():
+def _static_index():
     return static_file('index.html', root='./html/')
 
 
 @route('/yajikita/callback')
-def index():
+def _static_callback():
     return static_file('callback.html', root='./html/')
 
 @route('/yajikita/test')
@@ -31,6 +33,11 @@ def test():
               u['access_token'],
               date.today(),
               "1d")
+
+@route('/yajikita/race')
+def _static_race():
+    return static_file('race.html', root='./html/')
+
 
 @route('/yajikita/<filename>')
 def _static_file(filename):
@@ -54,16 +61,16 @@ def _validate_session(session):
 
 
 @route('/yajikita/api/oauth_info')
-def get_oauth_info():
+def _get_oauth_info():
     qp = urlencode((
         ('response_type', 'code'), ('client_id', client_id), ('redirect_uri', redirect_uri),
-        ('scope', ' '.join(['activity', 'profile']))
+        ('scope', ' '.join(['activity', 'profile', 'social']))
     ))
     url = 'https://www.fitbit.com/oauth2/authorize?' + qp
     return _response_json({'url': url})
 
 @route('/yajikita/api/oauth_callback')
-def oauth_callback():
+def _oauth_callback():
     callback_code = request.query["code"]
     ret = register(callback_code)
     if ret:
@@ -74,12 +81,12 @@ def oauth_callback():
 
 
 @route('/yajikita/api/dashboard')
-def get_dashboard():
+def _get_dashboard():
     user_id = _validate_session(request.query['session'])
-    ret = _response_json(get_dashboard_info(user_id) if user_id else None)
+    ret = get_dashboard_info(user_id) if user_id else None
     if not ret:
         return HTTPResponse(status=401)
-    return ret
+    return _response_json(ret)
 
 # To refresh access token, GET this URI per 4hours.
 @route('/yajikita/api/refresh')
@@ -98,3 +105,36 @@ def reload_step():
     users = list_users()
     for s_user in users:
         get_steps(s_user["user_id"], s_user["access_token"], "today", "7d")
+
+@route('/yajikita/api/friends')
+def _get_friends():
+    user_id = _validate_session(request.query['session'])
+    access_token = get_access_token(user_id)
+    ret = None
+    if user_id and access_token:
+        ret = get_friends(user_id, access_token)
+    if not ret:
+        return HTTPResponse(status=401)
+    return _response_json(ret)
+
+@route('/yajikita/api/race', method='POST')
+def _create_race():
+    user_id = _validate_session(request.query['session'])
+    try:
+        req = json.loads(request.body.read().decode('utf8'))
+    except Exception:
+        return HTTPResponse(status=400, body='invalid json')
+    name, start, end = req.get('name'), req.get('start'), req.get('end')
+    members = req.get('members', [])
+    if not (name and start and end and members):
+        return HTTPResponse(status=400, body='name, start, end, members is required field')
+    if len(name) > 128:
+        return HTTPResponse(status=400, body='name is too long')
+    if len(members) <= 1:
+        return HTTPResponse(status=400, body='members requires two or more entries')
+    try:
+        start = date.fromisoformat(start)
+        end = date.fromisoformat(end)
+    except Exception:
+        return HTTPResponse(status=400, body='start/end date is invalid')
+    register_race(user_id, name, start, end, members)

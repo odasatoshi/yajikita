@@ -39,7 +39,7 @@ var Main = (function () {
                 var e_race_graph = document.createElement('div');
                 e_race_graph.setAttribute('class', 'graph');
                 e_race.appendChild(e_race_graph);
-                var max_steps = (race['members'] ? race['members'][0]['steps'] : 1);
+                var max_steps = (race['members'] && race['members'][0] ? race['members'][0]['steps'] : 1);
                 race['members'].forEach(function (m) {
                     var u = users[m['user_id']];
                     var e_u = document.createElement('div');

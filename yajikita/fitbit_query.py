@@ -2,7 +2,8 @@ import base64
 import requests
 import os
 import json
-from yajikita.user_master import update_user, update_steps, list_users
+from yajikita.user_master import (
+    update_user, update_steps, list_users, get_access_token, get_refresh_token)
 
 
 client_secret = os.environ['fb_ClientSecret']
@@ -61,9 +62,9 @@ def refresh_profile(rtoken):
         user_id = ret["user_id"]
         access_token = ret["access_token"]
         refresh_token = ret["refresh_token"]
-        update_user(user_id, access_token=access_token, refresh_token=refresh_token)
+        return update_user(user_id, access_token=access_token, refresh_token=refresh_token)
     else:
-        print("ERROR")
+        return None
 
 
 def get_user_profile(user_id, access_token):
@@ -97,3 +98,19 @@ def renew_per_hour():
     users = list_users()
     for s_user in users:
         get_user_profile(s_user[0],s_user[1])
+
+def get_friends(user_id, access_token, *, retry=False):
+    auth = 'Bearer ' + access_token
+    headers = {
+        'Authorization': auth,
+    }
+    response = requests.get('https://api.fitbit.com/1.1/user/-/friends.json', headers=headers)
+    if response.status_code == 401 and not retry:
+        if 'Access token expired' in response.text:
+            rtoken = get_refresh_token(user_id)
+            refresh_profile(rtoken)
+            access_token = get_access_token(user_id)
+            return get_friends(user_id, access_token, retry=True)
+    if response.status_code != 200:
+        return None
+    return response.json()["data"]

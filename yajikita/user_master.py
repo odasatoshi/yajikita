@@ -31,7 +31,8 @@ def initialize():
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             start TEXT NOT NULL,
-            end TEXT NOT NULL
+            end TEXT NOT NULL,
+            owner_id TEXT NOT NULL
         )''')
         cursor.execute('''
         CREATE TABLE RACE_MEMBERS (
@@ -90,6 +91,26 @@ def list_users():
             {'id': row[0], 'access_token': row[1], 'refresh_token': row[2]}
             for row in cursor.execute(
                     'SELECT id, access_token, refresh_token FROM USERS')]
+
+def get_access_token(user_id):
+    if not user_id:
+        return None
+    with sqlite3.connect(user_db) as conn:
+        cursor = conn.cursor()
+        ret = cursor.execute('SELECT access_token FROM USERS WHERE id=?', (user_id,)).fetchone()
+        if ret:
+            return ret[0]
+        return None
+
+def get_refresh_token(user_id):
+    if not user_id:
+        return None
+    with sqlite3.connect(user_db) as conn:
+        cursor = conn.cursor()
+        ret = cursor.execute('SELECT refresh_token FROM USERS WHERE id=?', (user_id,)).fetchone()
+        if ret:
+            return ret[0]
+        return None
 
 def get_dashboard_info(user_id):
     # TODO: ISUCON!
@@ -161,9 +182,25 @@ def get_dashboard_info(user_id):
         else:
             # レースが1つもない場合
             u = cursor.execute('SELECT displayName, avatar FROM USERS WHERE id=?', (user_id,)).fetchone()
+            if not u:
+                return None  # 未登録ユーザ
             ret['name'] = u[0]
             ret['avatar'] = u[1]
         ret['n_races'] = {
             'running': n_running
         }
     return ret
+
+
+def register_race(user_id, name, start, end, members):
+    with sqlite3.connect(user_db) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            'INSERT INTO RACES (name, start, end, owner_id) '
+            'VALUES (?, ?, ?, ?)',
+            (name, str(start), str(end), user_id))
+        race_id = cur.lastrowid
+        cur.executemany(
+            'INSERT INTO RACE_MEMBERS (race_id, user_id) VALUES (?, ?)',
+            [(race_id, m) for m in members])
+        conn.commit()

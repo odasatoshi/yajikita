@@ -48,7 +48,7 @@ class Main {
         e_race_graph.setAttribute('class', 'graph');
         e_race.appendChild(e_race_graph);
 
-        const max_steps = (race['members'] ? race['members'][0]['steps'] : 1);
+        const max_steps = (race['members'] && race['members'][0] ? race['members'][0]['steps'] : 1);
 
         race['members'].forEach((m: any) => {
           const u = users[m['user_id']];
