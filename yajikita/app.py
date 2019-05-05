@@ -104,7 +104,7 @@ def reload_step():
     from yajikita.fitbit_query import get_steps
     users = list_users()
     for s_user in users:
-        get_steps(s_user["user_id"], s_user["access_token"], "today", "7d")
+        get_steps(s_user["id"], s_user["access_token"], "today", "7d")
 
 @route('/yajikita/api/friends')
 def _get_friends():
