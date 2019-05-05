@@ -6,6 +6,7 @@
 
    1. `export fb_ClientSecret=<Client Secret>`
    2. `export fb_ClientID=<Client ID>`
+   3. `export yajikita_host=<Host名>(http://localhost:8080)`
    3. `python -m yajikita`
 
 3. ブラウザからダッシュボードを開く
