@@ -8,7 +8,10 @@ from yajikita.user_master import (
 
 client_secret = os.environ['fb_ClientSecret']
 client_id = os.environ['fb_ClientID']
-redirect_uri = 'http://localhost:8080/yajikita/callback'
+host_path = os.environ['yajikita_host']
+if host_path == "":
+    host_path = "http://localhost:8080"
+redirect_uri = host_path + '/yajikita/callback'
 ACCESS_TOKEN_EXPIRES_IN = 86400 * 30  # 30 days
 
 def check_precondition():
